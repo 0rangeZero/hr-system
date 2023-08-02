@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.czl.system.mapper.PostMapper">
+
+    <resultMap id="PostMap" type="com.czl.model.system.Post" autoMapping="true"></resultMap>
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="columns">
+        post_id, post_name, post_code, post.dept_id, dept.dept_name,
+        post.status, post.create_time, post.update_time, post.is_deleted
+    </sql>
+
+    <sql id="selectDept">
+        select dept.dept_id from dept where dept_name like CONCAT('%',#{vo.deptName},'%')
+    </sql>
+
+    <select id="selectPage" resultMap="PostMap">
+        select distinct <include refid="columns" />
+        from post
+        inner join dept on post.dept_id = dept.dept_id
+        <where>
+            <if test="vo.postName != null and vo.postName != ''">
+                and post_name like CONCAT('%',#{vo.postName},'%')
+            </if>
+            <if test="vo.deptName != null and vo.deptName != ''">
+                and post.dept_id = (<include refid="selectDept" />)
+            </if>
+            and post.is_deleted = 0
+        </where>
+    </select>
+
+</mapper>

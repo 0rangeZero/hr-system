@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.czl.system.mapper.LeaveMapper">
+
+    <resultMap id="LeaveMap" type="com.czl.model.system.Leave" autoMapping="true"></resultMap>
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="columns">
+        leave_id, leave_days, `leave`.leave_time, leave_reason, passed,
+        `leave`.user_id, work_id, `name`, sex
+    </sql>
+
+    <select id="selectPage" resultMap="LeaveMap">
+        select <include refid="columns" />
+        from `leave`, `user`
+        <where>
+            `leave`.user_id = `user`.user_id
+            and `user`.user_id = #{vo.userId}
+            <if test="vo.keywords != null and vo.keywords != ''">
+                and leave_reason like CONCAT('%',#{vo.keywords},'%')
+            </if>
+            <if test="vo.createTimeBegin != null and vo.createTimeBegin != ''">
+                and `leave`.leave_time >= #{vo.createTimeBegin}
+            </if>
+            <if test="vo.createTimeEnd != null and vo.createTimeEnd != ''">
+                and `leave`.leave_time &lt;= #{vo.createTimeEnd}
+            </if>
+            and `leave`.is_deleted = 0
+        </where>
+    </select>
+
+    <select id="selectAllPage" resultMap="LeaveMap">
+        select <include refid="columns" />
+        from `leave`, `user`
+        <where>
+            `leave`.user_id = `user`.user_id
+            <if test="vo.passed == 2">
+                and passed = 2
+            </if>
+            <if test="vo.passed != 2">
+                and passed not in (2)
+            </if>
+            <if test="vo.keywords != null and vo.keywords != ''">
+                and (leave_reason like CONCAT('%',#{vo.keywords},'%')
+                or `user`.work_id like CONCAT('%',#{vo.keywords},'%')
+                or `user`.`name` like CONCAT('%',#{vo.keywords},'%'))
+            </if>
+            <if test="vo.createTimeBegin != null and vo.createTimeBegin != ''">
+                and `leave`.leave_time >= #{vo.createTimeBegin}
+            </if>
+            <if test="vo.createTimeEnd != null and vo.createTimeEnd != ''">
+                and `leave`.leave_time &lt;= #{vo.createTimeEnd}
+            </if>
+            and `leave`.is_deleted = 0
+        </where>
+        order by `leave`.create_time desc
+    </select>
+
+</mapper>

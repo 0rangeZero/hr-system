@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.czl.system.mapper.UserMapper">
+
+    <resultMap id="UserMap" type="com.czl.model.system.User" autoMapping="true"></resultMap>
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="columns1">
+      user_id,user_name,password,work_id,name,sex,birthday,
+      address,phone,email,identification,entry_date,work_time,leave_time,
+      head_url,user.dept_id,user.post_id,user.status,user.create_time,user.update_time,user.is_deleted,
+      dept_name,post_name,salary_name,user.salary_id
+    </sql>
+    <sql id="columns2">
+        payoff.create_time,`user`.work_id,`user`.`name`,`user`.sex,
+        `user`.dept_id,`user`.post_id,dept_name,post_name,
+        salary_name,basic_salary,merit_pay,allowance,bonus,finsurances
+    </sql>
+    <sql id="columns3">
+        `user`.work_id,`user`.`name`,`user`.sex,dept_name,post_name,
+        basic_salary,merit_pay,allowance,bonus,finsurances
+    </sql>
+
+    <select id="selectPage" resultMap="UserMap">
+        select <include refid="columns1" />
+        from user
+        inner join dept on user.dept_id = dept.dept_id
+        inner join post on user.post_id = post.post_id
+        left join salary on user.salary_id = salary.salary_id
+        <where>
+            <if test="vo.keyword != null and vo.keyword != ''">
+                and (user_name like CONCAT('%',#{vo.keyword},'%')
+                or name like CONCAT('%',#{vo.keyword},'%')
+                or work_id like CONCAT('%',#{vo.keyword},'%'))
+            </if>
+            <if test="vo.createTimeBegin != null and vo.createTimeBegin != ''">
+                and user.work_time >= #{vo.createTimeBegin}
+            </if>
+            <if test="vo.createTimeEnd != null and vo.createTimeEnd != ''">
+                and user.work_time &lt;= #{vo.createTimeEnd}
+            </if>
+            <if test="vo.deptId != null and vo.deptId != ''">
+                and user.dept_id = #{vo.deptId}
+            </if>
+            <if test="vo.postId != null and vo.postId != ''">
+                and user.post_id = #{vo.postId}
+            </if>
+            and user.is_deleted = 0
+        </where>
+    </select>
+
+    <select id="selectPayOffPage" resultMap="UserMap">
+        select <include refid="columns2" />
+        from payoff
+        inner join `user` on payoff.user_id = `user`.user_id
+        inner join dept on `user`.dept_id = dept.dept_id
+        inner join post on `user`.post_id = post.post_id
+        inner join salary on payoff.salary_id = salary.salary_id
+        <where>
+            <if test="vo.keyword != null and vo.keyword != ''">
+                and (name like CONCAT('%',#{vo.keyword},'%')
+                or work_id like CONCAT('%',#{vo.keyword},'%'))
+            </if>
+            <if test="vo.createTimeBegin != null and vo.createTimeBegin != ''">
+                and payoff.create_time >= #{vo.createTimeBegin}
+            </if>
+            <if test="vo.createTimeEnd != null and vo.createTimeEnd != ''">
+                and payoff.create_time &lt;= #{vo.createTimeEnd}
+            </if>
+            <if test="vo.deptId != null and vo.deptId != ''">
+                and user.dept_id = #{vo.deptId}
+            </if>
+            <if test="vo.userId != null">
+                and payoff.user_id = #{vo.userId}
+            </if>
+            and user.is_deleted = 0
+        </where>
+        order by payoff.create_time desc
+    </select>
+
+    <select id="selectExcelInfo" resultMap="UserMap">
+        select <include refid="columns3" />
+        from payoff
+        inner join `user` on payoff.user_id = `user`.user_id
+        inner join dept on `user`.dept_id = dept.dept_id
+        inner join post on `user`.post_id = post.post_id
+        inner join salary on payoff.salary_id = salary.salary_id
+        <where>
+            <if test="userId != null">
+                and payoff.user_id = #{userId}
+            </if>
+            and user.is_deleted = 0
+        </where>
+        order by payoff.create_time desc
+    </select>
+
+</mapper>
